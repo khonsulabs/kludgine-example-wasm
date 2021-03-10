@@ -1,0 +1,26 @@
+[tasks.wasm-pack-development]
+condition = { profiles = ["development"] }
+script = [
+    "RUSTFLAGS=--cfg=web_sys_unstable_apis cargo build --target wasm32-unknown-unknown --target-dir ./target",
+    "wasm-bindgen target/wasm32-unknown-unknown/debug/kludgineweb.wasm --target web --out-dir static/pkg --remove-producers-section",
+    "wasm-opt -O0 static/pkg/kludgineweb_bg.wasm -o static/pkg/kludgineweb_bg.wasm",
+]
+
+[tasks.wasm-pack-release]
+condition = { profiles = ["release"] }
+script = [
+    "RUSTFLAGS=--cfg=web_sys_unstable_apis cargo build --target wasm32-unknown-unknown --release --target-dir ./target",
+    "wasm-bindgen target/wasm32-unknown-unknown/release/web.wasm --target web --out-dir static/pkg --out-name web --remove-producers-section",
+    "wasm-opt -Os static/pkg/web_bg.wasm -o static/pkg/web_bg.wasm",
+]
+
+[tasks.wasm-pack]
+run_task = { name = ["wasm-pack-release", "wasm-pack-development"], parallel = true }
+
+[tasks.build-wasm]
+clear = true # For this project we don't want the default build command
+run_task = { name = ["wasm-pack"] } 
+
+[tasks.build]
+clear = true # For this project we don't want the default build command
+run_task = { name = ["build-wasm"] }
